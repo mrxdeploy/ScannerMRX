@@ -1,0 +1,109 @@
+Atualize e expanda o sistema existente de scanner por imagem,
+renomeando oficialmente o sistema para:
+
+MRX SCAN
+
+OBJETIVO:
+Criar uma interface de gerenciamento visual do dataset de imagens,
+permitindo:
+- Criar novas pastas de classificação
+- Visualizar todas as imagens existentes em cada pasta
+- Fazer upload de várias imagens de uma só vez
+- Manter compatibilidade total com o sistema de scanner e classificação
+
+NOME DO SISTEMA:
+- Nome exibido no frontend: MRX SCAN
+- Usar esse nome no header, title da página e identidade visual
+
+GESTÃO DE PASTAS (CLASSIFICAÇÕES):
+Implementar funcionalidades para:
+1. Listar todas as pastas existentes dentro de /dataset
+2. Criar nova pasta de classificação dinamicamente
+3. Garantir que os nomes das pastas sejam usados diretamente
+   pelo sistema de IA (sem aliases ou traduções)
+
+EXEMPLO DE ESTRUTURA:
+ /dataset
+   /HIGH GRADE
+   /MIDION GRADE
+   /MIDION GRADE 1 - MG 1
+   /MIDION GRADE 2 - MG 2
+   /LOW GRADE
+   /LOW
+   /DIVERSOS
+   /GARIMPOS
+   /MOAGEM
+   /HD
+
+VISUALIZAÇÃO DAS IMAGENS:
+- Ao clicar em uma pasta:
+   - Exibir todas as imagens daquela classificação
+   - Mostrar as imagens em formato de grid (cards)
+   - Permitir scroll
+   - Mostrar nome do arquivo abaixo da imagem
+
+UPLOAD DE IMAGENS:
+- Permitir upload de múltiplas imagens ao mesmo tempo
+- Aceitar seleção múltipla (input type="file" multiple)
+- As imagens devem ser salvas diretamente na pasta selecionada
+- Após upload:
+   - Atualizar automaticamente a visualização
+   - Atualizar embeddings do dataset
+
+FRONTEND (ESTILO GOOGLE DRIVE – CONFORME PRINT):
+- Layout limpo e profissional
+- Interface baseada em:
+   - Cards de pastas
+   - Ícone de pasta
+   - Nome da pasta abaixo ou ao lado
+- Grid responsivo
+- Barra superior com:
+   - Logo / Nome: MRX SCAN
+   - Botão “Criar pasta”
+   - Botão “Adicionar imagens”
+- Comportamento semelhante ao Google Drive:
+   - Clique em pasta → abre conteúdo
+   - Botão voltar
+
+TECNOLOGIAS DE FRONT:
+- HTML + CSS + JavaScript puro (ou framework leve)
+- Estilo clean
+- Cores neutras
+- Ícones simples
+- UX focado em operador
+
+ENDPOINTS NECESSÁRIOS:
+- GET /dataset/classes
+  → lista pastas existentes
+
+- POST /dataset/create
+  → cria nova pasta de classificação
+
+- GET /dataset/images/{class_name}
+  → retorna lista de imagens da pasta
+
+- POST /dataset/upload-multiple
+  → upload de múltiplas imagens para uma pasta específica
+
+REGRAS IMPORTANTES:
+- Não apagar imagens automaticamente
+- Não renomear pastas sem confirmação
+- Toda nova imagem adicionada deve:
+   - Ser incorporada ao dataset
+   - Ter embedding gerado automaticamente
+- Sistema deve continuar funcionando offline
+
+EXPERIÊNCIA DO USUÁRIO:
+O operador deve conseguir:
+- Visualizar claramente todas as classificações
+- Ver as imagens reais usadas pela IA
+- Adicionar várias imagens rapidamente
+- Manter o dataset organizado sem conhecimento técnico
+
+RESULTADO FINAL:
+Um sistema chamado MRX SCAN, com:
+- Scanner por câmera
+- Classificação automática
+- Visualização das imagens de referência
+- Gestão completa de pastas e imagens
+- Interface visual semelhante ao Google Drive

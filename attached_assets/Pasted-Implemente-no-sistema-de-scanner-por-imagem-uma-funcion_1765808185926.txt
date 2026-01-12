@@ -1,0 +1,91 @@
+Implemente no sistema de scanner por imagem uma funcionalidade que,
+além de classificar o item escaneado, retorne a imagem de referência
+mais semelhante utilizada como base para a decisão da IA.
+
+OBJETIVO:
+Quando o usuário escanear um material pela câmera, o sistema deve:
+1. Informar a classificação final
+2. Informar o percentual de similaridade
+3. Exibir a imagem do dataset que foi considerada a mais parecida
+   (imagem de referência)
+
+FUNCIONAMENTO DETALHADO:
+1. A imagem capturada pela câmera é convertida em embedding vetorial
+2. Cada imagem do dataset já possui:
+   - caminho do arquivo
+   - classificação (nome da pasta)
+   - embedding vetorial
+3. O sistema calcula a similaridade da imagem capturada com TODAS as imagens
+4. O sistema identifica:
+   - a imagem individual com MAIOR similaridade
+5. Essa imagem será considerada a "imagem de referência"
+
+RETORNO DO SCANNER:
+A resposta da API deve conter:
+- classification: nome da classificação final
+- similarity_score: percentual de similaridade
+- reference_image:
+    - file_path (ou URL)
+    - classification
+    - similarity_score
+- top_matches (opcional):
+    - lista das 3 imagens mais similares com:
+        - classificação
+        - caminho da imagem
+        - score
+
+REGRA DE DECISÃO:
+- A classificação final deve ser definida pela média de similaridade
+  das imagens pertencentes à mesma pasta
+- A imagem de referência deve ser SEMPRE a imagem individual com
+  maior score de similaridade, mesmo que outras imagens da mesma pasta
+  também tenham scores altos
+
+EXEMPLO DE RESPOSTA DA API (/scan):
+{
+  "classification": "MIDION GRADE 1 - MG 1",
+  "similarity_score": 92.4,
+  "reference_image": {
+    "image_path": "/dataset/MIDION GRADE 1 - MG 1/img_023.jpg",
+    "similarity": 95.1
+  },
+  "top_matches": [
+    {
+      "classification": "MIDION GRADE 1 - MG 1",
+      "image_path": "/dataset/MIDION GRADE 1 - MG 1/img_023.jpg",
+      "similarity": 95.1
+    },
+    {
+      "classification": "MIDION GRADE",
+      "image_path": "/dataset/MIDION GRADE/img_011.jpg",
+      "similarity": 91.8
+    },
+    {
+      "classification": "LOW GRADE",
+      "image_path": "/dataset/LOW GRADE/img_034.jpg",
+      "similarity": 88.6
+    }
+  ]
+}
+
+FRONTEND:
+- Exibir lado a lado:
+   - Imagem capturada
+   - Imagem de referência usada pela IA
+- Exibir:
+   - Nome da classificação
+   - Percentual de similaridade
+- Interface simples e clara para operador humano
+
+REQUISITOS:
+- Não usar APIs pagas
+- Processamento local
+- Código modular
+- Fácil manutenção
+- Preparado para auditoria visual (operador confirma decisão)
+
+RESULTADO ESPERADO:
+O operador consegue ver claramente:
+- O material escaneado
+- A imagem do banco de dados que a IA usou como base
+- A classificação atribuída

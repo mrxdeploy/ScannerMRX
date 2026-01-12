@@ -1,0 +1,70 @@
+Expanda o sistema MRX SCAN para incluir um modo de captura múltipla
+de imagens diretamente pela câmera, permitindo adicionar várias fotos
+de uma só vez em uma pasta de classificação.
+
+OBJETIVO:
+Na hora de adicionar imagens ao dataset, o operador deve poder:
+- Ativar a câmera
+- Tirar várias fotos em sequência
+- Visualizar as fotos capturadas
+- Enviar todas juntas para uma pasta específica
+
+MODO DE CAPTURA MÚLTIPLA:
+Implementar um “Modo Captura Múltipla” com as seguintes regras:
+
+1. O operador seleciona uma pasta de destino
+2. Ativa a câmera
+3. Cada clique em “Capturar”:
+   - Salva a imagem temporariamente em memória
+   - Exibe a miniatura (preview)
+4. O operador pode capturar N imagens (sem limite fixo)
+5. Botões disponíveis:
+   - “Capturar foto”
+   - “Remover foto”
+   - “Enviar todas”
+
+COMPORTAMENTO APÓS ENVIO:
+- Todas as imagens capturadas devem ser:
+   - Salvas na pasta selecionada
+   - Processadas pelo modelo de IA
+   - Convertidas em embeddings automaticamente
+- Atualizar a visualização da pasta sem recarregar a página
+
+FRONTEND (UX):
+- Exibir thumbnails das fotos capturadas em grid
+- Permitir remover imagens individuais antes do envio
+- Indicar quantidade de fotos capturadas
+- Interface simples e rápida para operador
+
+BACKEND:
+Criar endpoint específico:
+- POST /dataset/capture-multiple
+  → recebe múltiplas imagens em uma única requisição
+  → recebe também o nome da pasta de destino
+
+REQUISITOS TÉCNICOS:
+- Captura via getUserMedia (browser)
+- Conversão das imagens para Blob/Base64
+- Envio via FormData
+- Suporte a múltiplos arquivos no backend
+- Não usar APIs pagas
+
+REGRAS IMPORTANTES:
+- Nenhuma imagem deve ser salva sem confirmação do operador
+- Nenhuma imagem deve sobrescrever arquivos existentes
+- Nomear arquivos automaticamente (timestamp + UUID)
+- Garantir compatibilidade com o sistema de embeddings existente
+
+INTEGRAÇÃO COM O SISTEMA:
+- O modo de captura múltipla deve funcionar junto com:
+   - Upload múltiplo por arquivos
+   - Scanner de classificação
+   - Visualização de pastas
+- Não quebrar funcionalidades existentes
+
+RESULTADO FINAL:
+O MRX SCAN permitirá:
+- Alimentar rapidamente o banco de imagens
+- Capturar vários ângulos do mesmo material
+- Melhorar a precisão da IA
+- Operação eficiente em ambiente real de estoque

@@ -1,0 +1,36 @@
+[project]
+name = "mrx-scan"
+version = "2.0.0"
+description = "Electronic Scrap Classification Scanner"
+requires-python = ">=3.11,<3.12"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn>=0.30.0",
+    "python-multipart>=0.0.9",
+    "pillow>=10.0.0",
+    "numpy>=1.26.0",
+    "scipy>=1.11.0",
+    "opencv-python-headless>=4.8.0",
+    "torch>=2.0.0",
+    "torchvision>=0.15.0",
+    "open-clip-torch>=2.20.0",
+    "ftfy>=6.1.0",
+    "regex>=2023.0.0",
+    "tqdm>=4.66.0",
+    "sqlalchemy>=2.0.0",
+    "huggingface-hub>=0.20.0",
+    "safetensors>=0.4.0",
+    "timm>=0.9.0",
+]
+
+[tool.uv]
+index-strategy = "unsafe-best-match"
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = [{ index = "pytorch-cpu" }]
+torchvision = [{ index = "pytorch-cpu" }]

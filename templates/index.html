@@ -1,0 +1,1906 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MRX SCAN - Sistema de Classificacao</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+
+        /* ===== FIX MOBILE & RESPONSIVIDADE ===== */
+
+/* Evita scroll horizontal */
+/* ============================= */
+/* CORREÇÃO DEFINITIVA MOBILE */
+/* ============================= */
+
+/* Garante zero scroll horizontal */
+html, body {
+    overflow-x: hidden;
+    width: 100%;
+}
+
+/* HEADER */
+@media (max-width: 768px) {
+    .header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        padding: 12px;
+    }
+
+    .logo {
+        justify-content: center;
+    }
+
+    .nav-tabs {
+        width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .nav-tab {
+        flex: 1 1 48%;
+        text-align: center;
+    }
+
+    .header-actions {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .header-actions .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* ============================= */
+/* DATASET – BARRA SUPERIOR */
+/* ============================= */
+
+/* SOBRESCREVE O inline-style PROBLEMÁTICO */
+@media (max-width: 768px) {
+    #datasetView > #folderListView > div:first-child {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 16px;
+    }
+
+    #datasetView h1.page-title {
+        text-align: center;
+    }
+
+    #datasetView .page-subtitle {
+        text-align: center;
+    }
+
+    #datasetView > #folderListView > div:first-child > div:last-child {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        width: 100%;
+    }
+
+    #datasetView > #folderListView > div:first-child button {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* ============================= */
+/* CARDS DE ESTATÍSTICA */
+/* ============================= */
+@media (max-width: 768px) {
+    .stats-cards {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ============================= */
+/* GRID DE PASTAS */
+/* ============================= */
+@media (max-width: 768px) {
+    .folder-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+    .folder-card {
+        padding: 16px;
+    }
+}
+
+/* ============================= */
+/* GRID DE IMAGENS */
+/* ============================= */
+@media (max-width: 768px) {
+    .image-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+}
+
+/* ============================= */
+/* BOTÕES GERAIS */
+/* ============================= */
+@media (max-width: 768px) {
+    .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .controls .btn {
+        flex: 1 1 100%;
+    }
+}
+
+/* Garante que tudo respeite a tela */
+.main-container,
+.panel,
+.result-section,
+.camera-container,
+.image-box,
+.image-grid,
+.folder-grid {
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+/* Imagens e câmera nunca passam da largura */
+img, video, canvas {
+    max-width: 100%;
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+    display: block;
+}
+
+/* Caixa da câmera — mantém proporção e não estoura */
+.camera-container {
+    width: 100%;
+    aspect-ratio: 4/3;
+}
+
+/* Ajuste do preview */
+#video,
+#canvas,
+#capturedImage,
+#referenceImage {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Grid do scanner — força coluna única no mobile */
+@media (max-width: 768px) {
+    .scanner-container {
+        grid-template-columns: 1fr !important;
+        gap: 16px;
+    }
+
+    .main-container {
+        padding: 12px;
+    }
+
+    /* Botões quebram corretamente */
+    .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .controls .btn {
+        flex: 1 1 48%;
+    }
+
+    /* Grid de imagens do dataset */
+    .image-grid {
+        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    }
+
+    .folder-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    }
+}
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .header {
+            background: #fff;
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #e0e0e0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            height: 45px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .logo-text {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 8px;
+        }
+
+        .nav-tab {
+            padding: 8px 20px;
+            border: 1px solid #e0e0e0;
+            background: #fff;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: #666;
+            transition: all 0.2s;
+        }
+
+        .nav-tab:hover {
+            border-color: #22c55e;
+            color: #22c55e;
+        }
+
+        .nav-tab.active {
+            background: #22c55e;
+            color: #fff;
+            border-color: #22c55e;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #22c55e;
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: #16a34a;
+        }
+
+        .btn-secondary {
+            background: #fff;
+            color: #333;
+            border: 1px solid #e0e0e0;
+        }
+
+        .btn-secondary:hover {
+            background: #f5f5f5;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: #fff;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .page-subtitle {
+            color: #666;
+            margin-bottom: 24px;
+        }
+
+        .view-container {
+            display: none;
+        }
+
+        .view-container.active {
+            display: block;
+        }
+
+        .folder-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .folder-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .folder-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            border-color: #22c55e;
+        }
+
+        .folder-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 16px;
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            color: #fff;
+        }
+
+        .folder-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .folder-count {
+            color: #666;
+            font-size: 0.85rem;
+        }
+
+        .folder-count span {
+            background: #22c55e;
+            color: #fff;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 20px;
+            color: #666;
+        }
+
+        .breadcrumb a {
+            color: #22c55e;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 16px;
+        }
+
+        .image-card {
+            background: #fff;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .image-card:hover {
+            border-color: #22c55e;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .image-card img {
+            width: 100%;
+            aspect-ratio: 4/3;
+            object-fit: cover;
+        }
+
+        .image-card-info {
+            padding: 12px;
+            text-align: center;
+        }
+
+        .image-card-name {
+            font-size: 0.8rem;
+            color: #666;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .scanner-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 900px) {
+            .scanner-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: #fff;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .panel-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #333;
+        }
+
+        .panel-title i {
+            color: #22c55e;
+        }
+
+        .camera-container {
+            position: relative;
+            background: #1a1a2e;
+            border-radius: 12px;
+            overflow: hidden;
+            aspect-ratio: 4/3;
+        }
+
+        #video, #canvas {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        #canvas {
+            display: none;
+        }
+
+        .camera-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.7);
+            color: #94a3b8;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .camera-overlay i {
+            font-size: 48px;
+            color: #22c55e;
+        }
+
+        .camera-overlay.hidden {
+            display: none;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+
+        .result-header {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+
+        .result-classification {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .result-confidence {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .comparison-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        @media (max-width: 500px) {
+            .comparison-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .image-box {
+            background: #f9fafb;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid #e0e0e0;
+        }
+
+        .image-box-title {
+            background: #f1f5f9;
+            padding: 10px 15px;
+            font-weight: 500;
+            text-align: center;
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .image-box-title.reference {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .image-box img {
+            width: 100%;
+            aspect-ratio: 4/3;
+            object-fit: cover;
+            display: block;
+        }
+
+        .image-box-info {
+            padding: 10px 15px;
+            font-size: 0.8rem;
+            color: #666;
+            text-align: center;
+        }
+
+        .image-box-info strong {
+            color: #22c55e;
+        }
+
+        .top-matches {
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .top-matches h4 {
+            color: #666;
+            margin-bottom: 12px;
+            font-size: 0.9rem;
+        }
+
+        .match-item {
+            display: grid;
+            grid-template-columns: 60px 1fr auto;
+            gap: 12px;
+            padding: 10px;
+            background: #fff;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            align-items: center;
+            border: 1px solid #e0e0e0;
+        }
+
+        .match-thumbnail {
+            width: 60px;
+            height: 45px;
+            object-fit: cover;
+            border-radius: 6px;
+        }
+
+        .match-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .match-name {
+            color: #333;
+            font-weight: 500;
+            font-size: 0.85rem;
+        }
+
+        .match-path {
+            color: #94a3b8;
+            font-size: 0.7rem;
+        }
+
+        .match-score {
+            color: #22c55e;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #e0e0e0;
+            border-top-color: #22c55e;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .result-section {
+            margin-top: 20px;
+            display: none;
+        }
+
+        .result-section.active {
+            display: block;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: #fff;
+            border-radius: 16px;
+            padding: 24px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #22c55e;
+        }
+
+        .form-group input[type="file"] {
+            padding: 10px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .empty-state i {
+            font-size: 64px;
+            color: #e0e0e0;
+            margin-bottom: 20px;
+        }
+
+        .empty-state h3 {
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .status-message {
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .status-message.success {
+            display: block;
+            background: #dcfce7;
+            border: 1px solid #22c55e;
+            color: #166534;
+        }
+
+        .status-message.error {
+            display: block;
+            background: #fef2f2;
+            border: 1px solid #ef4444;
+            color: #dc2626;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .no-reference {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f1f5f9;
+            color: #94a3b8;
+            aspect-ratio: 4/3;
+        }
+
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 4px solid #22c55e;
+        }
+
+        .stat-card .label {
+            color: #666;
+            font-size: 0.85rem;
+            margin-bottom: 4px;
+        }
+
+        .stat-card .value {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .result-warning {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+
+        .warning-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .warning-message {
+            font-size: 1rem;
+            line-height: 1.5;
+            margin-bottom: 16px;
+        }
+
+        .warning-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-warning {
+            background: #fff;
+            color: #d97706;
+            border: none;
+        }
+
+        .btn-warning:hover {
+            background: #fef3c7;
+        }
+
+        .capture-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 12px;
+            margin: 16px 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .capture-thumbnail {
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid #e0e0e0;
+        }
+
+        .capture-thumbnail img {
+            width: 100%;
+            aspect-ratio: 1;
+            object-fit: cover;
+        }
+
+        .capture-thumbnail .remove-btn {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: #ef4444;
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .capture-count {
+            background: #22c55e;
+            color: #fff;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            display: inline-block;
+            margin-bottom: 12px;
+        }
+
+        .capture-camera-container {
+            background: #1a1a2e;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+        .capture-camera-container video {
+            width: 100%;
+            aspect-ratio: 4/3;
+            object-fit: cover;
+        }
+
+        /* ============================= */
+/* MODAL CAPTURA MULTIPLA */
+/* ============================= */
+
+#captureModal .modal {
+    width: 95%;
+    max-width: 600px;
+    padding: 16px;
+}
+
+@media (max-width: 768px) {
+    #captureModal .modal {
+        max-height: 95vh;
+        overflow-y: auto;
+    }
+
+    /* Força quebra dos botões */
+    #captureModal .modal > div[style*="display: flex"] {
+        flex-direction: column !important;
+        gap: 10px !important;
+    }
+
+    #captureModal .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    #captureModal video {
+        max-height: 240px;
+    }
+}
+/* ============================= */
+/* TOP 3 CORRESPONDÊNCIAS */
+/* ============================= */
+
+.match-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+}
+
+.match-card img {
+    flex-shrink: 0;
+    width: 56px;
+    height: 56px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.match-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0; /* ESSENCIAL para flex no mobile */
+    width: 100%;
+}
+
+.match-info strong {
+    font-size: 15px;
+    line-height: 1.2;
+}
+
+.match-info span {
+    font-size: 12px;
+    color: #666;
+    line-height: 1.3;
+
+    /* 🔑 CORREÇÃO DO TEXTO QUEBRANDO */
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    white-space: normal;
+}
+
+/* Mobile refinado */
+@media (max-width: 768px) {
+    .match-card {
+        align-items: flex-start;
+    }
+
+    .match-info span {
+        font-size: 11px;
+    }
+}
+
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">
+            <img src="/static/logo.png" alt="MRX Logo" class="logo-icon">
+            <span class="logo-text">MRX SCAN</span>
+        </div>
+        <nav class="nav-tabs">
+            <button class="nav-tab active" data-view="scanner">
+                <i class="fas fa-camera"></i> Scanner
+            </button>
+            <button class="nav-tab" data-view="dataset">
+                <i class="fas fa-folder"></i> Dataset
+            </button>
+        </nav>
+        <div class="header-actions">
+            <button class="btn btn-secondary" id="retrainBtn">
+                <i class="fas fa-sync-alt"></i> Retreinar
+            </button>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <div class="view-container active" id="scannerView">
+            <h1 class="page-title">Scanner de Classificacao</h1>
+            <p class="page-subtitle">Capture uma imagem para classificar automaticamente</p>
+            
+            <div class="scanner-container">
+                <div class="panel">
+                    <h2 class="panel-title">
+                        <i class="fas fa-camera"></i> Camera
+                    </h2>
+                    
+                    <div class="camera-container">
+                        <video id="video" autoplay playsinline></video>
+                        <canvas id="canvas"></canvas>
+                        <div class="camera-overlay" id="cameraOverlay">
+                            <i class="fas fa-camera"></i>
+                            <span>Clique em "Iniciar Camera"</span>
+                        </div>
+                    </div>
+
+                    <div class="controls">
+                        <button class="btn btn-primary" id="startCamera">
+                            <i class="fas fa-play"></i> Iniciar Camera
+                        </button>
+                        <button class="btn btn-primary" id="captureBtn" disabled>
+                            <i class="fas fa-camera"></i> Capturar
+                        </button>
+                        <button class="btn btn-secondary" id="stopCamera" disabled>
+                            <i class="fas fa-stop"></i> Parar
+                        </button>
+                    </div>
+
+                    <div class="loading" id="loading">
+                        <div class="spinner"></div>
+                        <p>Processando com IA...</p>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h2 class="panel-title">
+                        <i class="fas fa-chart-bar"></i> Resultado
+                    </h2>
+
+                    <div id="resultPlaceholder">
+                        <div class="empty-state">
+                            <i class="fas fa-image"></i>
+                            <h3>Aguardando captura</h3>
+                            <p>Capture uma imagem para ver a classificacao</p>
+                        </div>
+                    </div>
+
+                    <div class="result-section" id="resultSection">
+                        <div class="result-header" id="resultSuccess">
+                            <div class="result-classification" id="resultClass">-</div>
+                            <div class="result-confidence">Similaridade: <span id="resultScore">0</span>%</div>
+                        </div>
+
+                        <div class="result-warning hidden" id="resultNoMatch">
+                            <div class="warning-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                            <div class="result-classification">Sem Correspondencia</div>
+                            <div class="result-confidence">Similaridade: <span id="noMatchScore">0</span>%</div>
+                            <div class="warning-message" id="noMatchMessage">
+                                Essa imagem nao tem compatibilidade com nenhuma do seu banco de dados. Crie uma nova categoria ou adicione mais fotos.
+                            </div>
+                            <div class="warning-actions">
+                                <button class="btn btn-warning" id="createCategoryBtn">
+                                    <i class="fas fa-folder-plus"></i> Criar Nova Categoria
+                                </button>
+                                <button class="btn btn-warning" id="addPhotosBtn">
+                                    <i class="fas fa-images"></i> Adicionar Mais Fotos
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="comparison-container">
+                            <div class="image-box">
+                                <div class="image-box-title">Imagem Capturada</div>
+                                <img id="capturedImage" src="" alt="Imagem capturada">
+                            </div>
+                            <div class="image-box">
+                                <div class="image-box-title reference">Referencia (IA)</div>
+                                <img id="referenceImage" src="" alt="Referencia" class="hidden">
+                                <div class="no-reference hidden" id="noReference">Sem referencia</div>
+                                <div class="image-box-info">
+                                    <span id="refClass">-</span> | <strong id="refScore">0</strong>%
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="top-matches">
+                            <h4>Top 3 Correspondencias:</h4>
+                            <div id="topMatches"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="view-container" id="datasetView">
+            <div id="folderListView">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                    <div>
+                        <h1 class="page-title">Gestao de Dataset</h1>
+                        <p class="page-subtitle">Gerencie as pastas e imagens de classificacao</p>
+                    </div>
+                    <div style="display: flex; gap: 12px;">
+                        <button class="btn btn-secondary" id="createFolderBtn">
+                            <i class="fas fa-folder-plus"></i> Criar Pasta
+                        </button>
+                        <button class="btn btn-secondary" id="captureMultipleBtn">
+                            <i class="fas fa-camera"></i> Captura Multipla
+                        </button>
+                        <button class="btn btn-primary" id="uploadImagesBtn">
+                            <i class="fas fa-upload"></i> Adicionar Imagens
+                        </button>
+                    </div>
+                </div>
+
+                <div class="stats-cards" id="statsCards"></div>
+
+                <div class="folder-grid" id="folderGrid"></div>
+
+                <div class="empty-state hidden" id="emptyFolders">
+                    <i class="fas fa-folder-open"></i>
+                    <h3>Nenhuma pasta encontrada</h3>
+                    <p>Crie uma nova pasta de classificacao para comecar</p>
+                </div>
+            </div>
+
+            <div id="folderContentView" class="hidden">
+                <div class="breadcrumb">
+                    <a id="backToFolders"><i class="fas fa-arrow-left"></i> Voltar</a>
+                    <span>/</span>
+                    <span id="currentFolderName">-</span>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                    <h1 class="page-title" id="folderTitle">-</h1>
+                    <button class="btn btn-primary" id="uploadToFolderBtn">
+                        <i class="fas fa-upload"></i> Adicionar Imagens
+                    </button>
+                </div>
+
+                <div class="image-grid" id="imageGrid"></div>
+
+                <div class="empty-state hidden" id="emptyImages">
+                    <i class="fas fa-images"></i>
+                    <h3>Nenhuma imagem</h3>
+                    <p>Adicione imagens a esta pasta</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="createFolderModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Criar Nova Pasta</h3>
+                <button class="modal-close" id="closeCreateModal">&times;</button>
+            </div>
+            <form id="createFolderForm">
+                <div class="form-group">
+                    <label for="folderName">Nome da Classificacao:</label>
+                    <input type="text" id="folderName" placeholder="Ex: HIGH GRADE" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    <i class="fas fa-folder-plus"></i> Criar Pasta
+                </button>
+            </form>
+            <div class="status-message" id="createStatus"></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="uploadModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Adicionar Imagens</h3>
+                <button class="modal-close" id="closeUploadModal">&times;</button>
+            </div>
+            <form id="uploadForm">
+                <div class="form-group">
+                    <label for="uploadClass">Classificacao:</label>
+                    <select id="uploadClass" required></select>
+                </div>
+                <div class="form-group">
+                    <label for="uploadImages">Imagens (multipla selecao):</label>
+                    <input type="file" id="uploadImages" accept="image/*" multiple required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    <i class="fas fa-upload"></i> Enviar Imagens
+                </button>
+            </form>
+            <div class="status-message" id="uploadStatus"></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="captureModal">
+        <div class="modal" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3 class="modal-title">Captura Multipla</h3>
+                <button class="modal-close" id="closeCaptureModal">&times;</button>
+            </div>
+            <div class="form-group">
+                <label for="captureClass">Pasta de Destino:</label>
+                <select id="captureClass" required></select>
+            </div>
+            <div class="capture-camera-container">
+                <video id="captureVideo" autoplay playsinline></video>
+            </div>
+            <div style="display: flex; gap: 10px; margin-bottom: 16px;">
+                <button class="btn btn-primary" id="startCaptureCamera">
+                    <i class="fas fa-play"></i> Iniciar Camera
+                </button>
+                <button type="button" class="btn btn-primary" id="takeCapturePhoto" disabled>
+
+                    <i class="fas fa-camera"></i> Capturar Foto
+                </button>
+                <button class="btn btn-secondary" id="stopCaptureCamera" disabled>
+                    <i class="fas fa-stop"></i> Parar
+                </button>
+            </div>
+            <div class="capture-count" id="captureCount">0 fotos capturadas</div>
+            <div class="capture-grid" id="captureGrid"></div>
+            <button class="btn btn-primary" id="sendAllCaptures" style="width: 100%;" disabled>
+                <i class="fas fa-upload"></i> Enviar Todas as Fotos
+            </button>
+            <div class="status-message" id="captureStatus"></div>
+        </div>
+    </div>
+
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let stream = null;
+        let currentFolder = null;
+        let captureStream = null;
+        let capturedBlobs = [];
+
+        function getImageUrl(path) {
+            if (!path) return '';
+            const cleanPath = path.replace(/\\/g, '/');
+            if (cleanPath.startsWith('dataset/')) {
+                return '/images/' + cleanPath.substring(8);
+            }
+            if (cleanPath.startsWith('/')) {
+                return cleanPath;
+            }
+            return '/' + cleanPath;
+        }
+
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
+                tab.classList.add('active');
+                const viewId = tab.dataset.view + 'View';
+                document.getElementById(viewId).classList.add('active');
+                if (tab.dataset.view === 'dataset') {
+                    loadFolders();
+                }
+            });
+        });
+
+        document.getElementById('startCamera').addEventListener('click', async () => {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+                });
+                video.srcObject = stream;
+                document.getElementById('cameraOverlay').classList.add('hidden');
+                document.getElementById('startCamera').disabled = true;
+                document.getElementById('stopCamera').disabled = false;
+                document.getElementById('captureBtn').disabled = false;
+            } catch (err) {
+                alert('Erro ao acessar camera: ' + err.message);
+            }
+        });
+
+        document.getElementById('stopCamera').addEventListener('click', () => {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+            video.srcObject = null;
+            document.getElementById('cameraOverlay').classList.remove('hidden');
+            document.getElementById('startCamera').disabled = false;
+            document.getElementById('stopCamera').disabled = true;
+            document.getElementById('captureBtn').disabled = true;
+        });
+
+        document.getElementById('captureBtn').addEventListener('click', async () => {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0);
+            
+            document.getElementById('loading').classList.add('active');
+            document.getElementById('resultSection').classList.remove('active');
+            document.getElementById('resultPlaceholder').classList.add('hidden');
+            
+            canvas.toBlob(async (blob) => {
+                document.getElementById('capturedImage').src = URL.createObjectURL(blob);
+                
+                const formData = new FormData();
+                formData.append('image', blob, 'capture.jpg');
+                
+                try {
+                    const response = await fetch('/scan', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const result = await response.json();
+                    document.getElementById('loading').classList.remove('active');
+                    
+                    const resultSuccess = document.getElementById('resultSuccess');
+                    const resultNoMatch = document.getElementById('resultNoMatch');
+                    const refImage = document.getElementById('referenceImage');
+                    const noRef = document.getElementById('noReference');
+                    const comparisonBox = document.querySelector('.comparison-container');
+                    const topMatchesBox = document.querySelector('.top-matches');
+                    
+                    if (result.status === 'no_match') {
+                        resultSuccess.classList.add('hidden');
+                        resultNoMatch.classList.remove('hidden');
+                        document.getElementById('noMatchScore').textContent = result.similarity_score;
+                        document.getElementById('noMatchMessage').textContent = result.message;
+                        
+                        refImage.classList.add('hidden');
+                        noRef.classList.remove('hidden');
+                        
+                        comparisonBox.style.display = 'grid';
+                        topMatchesBox.style.display = 'block';
+                        
+                        const topMatchesContainer = document.getElementById('topMatches');
+                        topMatchesContainer.innerHTML = '';
+                        if (result.top_matches && result.top_matches.length > 0) {
+                            result.top_matches.forEach((match, index) => {
+                                const div = document.createElement('div');
+                                div.className = 'match-item';
+                                const imgUrl = getImageUrl(match.image_path);
+                                const shortPath = match.image_path ? match.image_path.split('/').slice(-2).join('/') : '';
+                                div.innerHTML = `
+                                    <img class="match-thumbnail" src="${imgUrl}" alt="Match ${index + 1}" onerror="this.style.display='none'">
+                                    <div class="match-info">
+                                        <span class="match-name">${match.classification}</span>
+                                        <span class="match-path">${shortPath}</span>
+                                    </div>
+                                    <span class="match-score">${match.similarity}%</span>
+                                `;
+                                topMatchesContainer.appendChild(div);
+                            });
+                        }
+                    } else if (result.has_dataset && result.status === 'match') {
+                        resultSuccess.classList.remove('hidden');
+                        resultNoMatch.classList.add('hidden');
+                        document.getElementById('resultClass').textContent = result.classification || 'Desconhecido';
+                        document.getElementById('resultScore').textContent = result.similarity_score;
+                        
+                        comparisonBox.style.display = 'grid';
+                        topMatchesBox.style.display = 'block';
+                        
+                        if (result.reference_image && result.reference_image.image_path) {
+                            refImage.src = getImageUrl(result.reference_image.image_path);
+                            refImage.classList.remove('hidden');
+                            noRef.classList.add('hidden');
+                            document.getElementById('refClass').textContent = result.reference_image.classification;
+                            document.getElementById('refScore').textContent = result.reference_image.similarity;
+                        } else {
+                            refImage.classList.add('hidden');
+                            noRef.classList.remove('hidden');
+                        }
+                        
+                        const topMatchesContainer = document.getElementById('topMatches');
+                        topMatchesContainer.innerHTML = '';
+                        
+                        if (result.top_matches && result.top_matches.length > 0) {
+                            result.top_matches.forEach((match, index) => {
+                                const div = document.createElement('div');
+                                div.className = 'match-item';
+                                const imgUrl = getImageUrl(match.image_path);
+                                const shortPath = match.image_path ? match.image_path.split('/').slice(-2).join('/') : '';
+                                div.innerHTML = `
+                                    <img class="match-thumbnail" src="${imgUrl}" alt="Match ${index + 1}" onerror="this.style.display='none'">
+                                    <div class="match-info">
+                                        <span class="match-name">${match.classification}</span>
+                                        <span class="match-path">${shortPath}</span>
+                                    </div>
+                                    <span class="match-score">${match.similarity}%</span>
+                                `;
+                                topMatchesContainer.appendChild(div);
+                            });
+                        }
+                    } else {
+                        resultSuccess.classList.remove('hidden');
+                        resultNoMatch.classList.add('hidden');
+                        document.getElementById('resultClass').textContent = 'Dataset vazio';
+                        document.getElementById('resultScore').textContent = '0';
+                        refImage.classList.add('hidden');
+                        noRef.classList.remove('hidden');
+                        document.getElementById('topMatches').innerHTML = '<p style="color: #666; text-align: center;">Adicione imagens ao dataset primeiro.</p>';
+                    }
+                    
+                    document.getElementById('resultSection').classList.add('active');
+                } catch (err) {
+                    document.getElementById('loading').classList.remove('active');
+                    alert('Erro: ' + err.message);
+                }
+            }, 'image/jpeg', 0.9);
+        });
+
+        async function loadFolders() {
+            try {
+                const response = await fetch('/dataset/classes');
+                const data = await response.json();
+                
+                const grid = document.getElementById('folderGrid');
+                const emptyState = document.getElementById('emptyFolders');
+                const select = document.getElementById('uploadClass');
+                const statsCards = document.getElementById('statsCards');
+                
+                grid.innerHTML = '';
+                select.innerHTML = '';
+                
+                let totalImages = 0;
+                data.classes.forEach(cls => totalImages += cls.image_count);
+                
+                statsCards.innerHTML = `
+                    <div class="stat-card">
+                        <div class="label">Total de Pastas</div>
+                        <div class="value">${data.classes.length}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">Total de Imagens</div>
+                        <div class="value">${totalImages}</div>
+                    </div>
+                `;
+                
+                if (data.classes.length === 0) {
+                    emptyState.classList.remove('hidden');
+                    grid.classList.add('hidden');
+                } else {
+                    emptyState.classList.add('hidden');
+                    grid.classList.remove('hidden');
+                    
+                    data.classes.forEach(cls => {
+                        const card = document.createElement('div');
+                        card.className = 'folder-card';
+                        card.innerHTML = `
+                            <div class="folder-icon"><i class="fas fa-folder"></i></div>
+                            <div class="folder-name">${cls.name}</div>
+                            <div class="folder-count"><span>${cls.image_count}</span> imagens</div>
+                        `;
+                        card.addEventListener('click', () => openFolder(cls.name));
+                        grid.appendChild(card);
+                        
+                        const option = document.createElement('option');
+                        option.value = cls.name;
+                        option.textContent = cls.name;
+                        select.appendChild(option);
+                    });
+                }
+            } catch (err) {
+                console.error('Error loading folders:', err);
+            }
+        }
+
+        async function openFolder(folderName) {
+            currentFolder = folderName;
+            document.getElementById('folderListView').classList.add('hidden');
+            document.getElementById('folderContentView').classList.remove('hidden');
+            document.getElementById('currentFolderName').textContent = folderName;
+            document.getElementById('folderTitle').textContent = folderName;
+            
+            try {
+                const response = await fetch(`/dataset/images/${encodeURIComponent(folderName)}`);
+                const data = await response.json();
+                
+                const grid = document.getElementById('imageGrid');
+                const emptyState = document.getElementById('emptyImages');
+                
+                grid.innerHTML = '';
+                
+                if (data.images.length === 0) {
+                    emptyState.classList.remove('hidden');
+                    grid.classList.add('hidden');
+                } else {
+                    emptyState.classList.add('hidden');
+                    grid.classList.remove('hidden');
+                    
+                    data.images.forEach(img => {
+                        const card = document.createElement('div');
+                        card.className = 'image-card';
+                        card.innerHTML = `
+                            <img src="${img.path}" alt="${img.filename}" loading="lazy">
+                            <div class="image-card-info">
+                                <span class="image-card-name">${img.filename}</span>
+                            </div>
+                        `;
+                        grid.appendChild(card);
+                    });
+                }
+            } catch (err) {
+                console.error('Error loading folder images:', err);
+            }
+        }
+
+        document.getElementById('backToFolders').addEventListener('click', () => {
+            document.getElementById('folderContentView').classList.add('hidden');
+            document.getElementById('folderListView').classList.remove('hidden');
+            currentFolder = null;
+            loadFolders();
+        });
+
+        document.getElementById('createFolderBtn').addEventListener('click', () => {
+            document.getElementById('createFolderModal').classList.add('active');
+            document.getElementById('createStatus').className = 'status-message';
+        });
+
+        document.getElementById('closeCreateModal').addEventListener('click', () => {
+            document.getElementById('createFolderModal').classList.remove('active');
+        });
+
+        document.getElementById('createFolderForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('folderName').value.trim();
+            const status = document.getElementById('createStatus');
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            
+            // Disable button
+            const originalBtnText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Criando...';
+            
+            try {
+                const formData = new FormData();
+                formData.append('name', name);
+                
+                const response = await fetch('/dataset/create', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    status.className = 'status-message success';
+                    status.textContent = 'Pasta criada com sucesso!';
+                    document.getElementById('folderName').value = '';
+                    loadFolders();
+                    setTimeout(() => {
+                        document.getElementById('createFolderModal').classList.remove('active');
+                        status.className = 'status-message';
+                        status.textContent = '';
+                    }, 1500);
+                } else {
+                    status.className = 'status-message error';
+                    status.textContent = result.detail || 'Erro ao criar pasta';
+                }
+            } catch (err) {
+                status.className = 'status-message error';
+                status.textContent = 'Erro: ' + err.message;
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnText;
+            }
+        });
+
+        document.getElementById('uploadImagesBtn').addEventListener('click', () => {
+            document.getElementById('uploadModal').classList.add('active');
+            document.getElementById('uploadStatus').className = 'status-message';
+        });
+
+        document.getElementById('uploadToFolderBtn').addEventListener('click', () => {
+            document.getElementById('uploadClass').value = currentFolder;
+            document.getElementById('uploadModal').classList.add('active');
+            document.getElementById('uploadStatus').className = 'status-message';
+        });
+
+        document.getElementById('closeUploadModal').addEventListener('click', () => {
+            document.getElementById('uploadModal').classList.remove('active');
+        });
+
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const classification = document.getElementById('uploadClass').value;
+            const files = document.getElementById('uploadImages').files;
+            const status = document.getElementById('uploadStatus');
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            
+            if (files.length === 0) {
+                status.className = 'status-message error';
+                status.textContent = 'Selecione pelo menos uma imagem';
+                return;
+            }
+            
+            // Disable button and show spinner
+            const originalBtnText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando ' + files.length + ' imagens...';
+            
+            try {
+                const formData = new FormData();
+                formData.append('classification', classification);
+                for (let i = 0; i < files.length; i++) {
+                    formData.append('images', files[i]);
+                }
+                
+                const response = await fetch('/dataset/upload-multiple', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    status.className = 'status-message success';
+                    status.textContent = result.message;
+                    document.getElementById('uploadImages').value = '';
+                    
+                    if (currentFolder === classification) {
+                        openFolder(currentFolder);
+                    }
+                    loadFolders();
+                    
+                    setTimeout(() => {
+                        document.getElementById('uploadModal').classList.remove('active');
+                        // Clear status validation
+                        status.className = 'status-message'; 
+                        status.textContent = '';
+                    }, 1500);
+                } else {
+                    status.className = 'status-message error';
+                    status.textContent = result.detail || 'Erro ao enviar imagens';
+                }
+            } catch (err) {
+                status.className = 'status-message error';
+                status.textContent = 'Erro: ' + err.message;
+            } finally {
+                // Restore button state
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnText;
+            }
+        });
+
+        document.getElementById('retrainBtn').addEventListener('click', async () => {
+            const btn = document.getElementById('retrainBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Retreinando...';
+            
+            try {
+                const response = await fetch('/dataset/retrain', { method: 'POST' });
+                const result = await response.json();
+                alert(result.message || 'Embeddings atualizados!');
+            } catch (err) {
+                alert('Erro: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-sync-alt"></i> Retreinar';
+            }
+        });
+
+        document.querySelectorAll('.modal-overlay').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                }
+            });
+        });
+
+        document.getElementById('createCategoryBtn').addEventListener('click', () => {
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
+            document.querySelector('[data-view="dataset"]').classList.add('active');
+            document.getElementById('datasetView').classList.add('active');
+            loadFolders();
+            document.getElementById('createFolderModal').classList.add('active');
+        });
+
+        document.getElementById('addPhotosBtn').addEventListener('click', () => {
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
+            document.querySelector('[data-view="dataset"]').classList.add('active');
+            document.getElementById('datasetView').classList.add('active');
+            loadFolders();
+            setTimeout(() => {
+                document.getElementById('uploadModal').classList.add('active');
+            }, 300);
+        });
+
+        document.getElementById('captureMultipleBtn').addEventListener('click', () => {
+            const captureSelect = document.getElementById('captureClass');
+            captureSelect.innerHTML = document.getElementById('uploadClass').innerHTML;
+            capturedBlobs = [];
+            updateCaptureGrid();
+            document.getElementById('captureStatus').className = 'status-message';
+            document.getElementById('captureModal').classList.add('active');
+        });
+
+        document.getElementById('closeCaptureModal').addEventListener('click', () => {
+            if (captureStream) {
+                captureStream.getTracks().forEach(track => track.stop());
+                captureStream = null;
+            }
+            capturedBlobs = [];
+            document.getElementById('captureModal').classList.remove('active');
+        });
+
+        document.getElementById('startCaptureCamera').addEventListener('click', async () => {
+            try {
+                captureStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+                });
+                document.getElementById('captureVideo').srcObject = captureStream;
+                document.getElementById('startCaptureCamera').disabled = true;
+                document.getElementById('stopCaptureCamera').disabled = false;
+                document.getElementById('takeCapturePhoto').disabled = false;
+            } catch (err) {
+                alert('Erro ao acessar camera: ' + err.message);
+            }
+        });
+
+        document.getElementById('stopCaptureCamera').addEventListener('click', () => {
+            if (captureStream) {
+                captureStream.getTracks().forEach(track => track.stop());
+                captureStream = null;
+            }
+            document.getElementById('captureVideo').srcObject = null;
+            document.getElementById('startCaptureCamera').disabled = false;
+            document.getElementById('stopCaptureCamera').disabled = true;
+            document.getElementById('takeCapturePhoto').disabled = true;
+        });
+
+        document.getElementById('takeCapturePhoto').addEventListener('click', () => {
+            const captureVideo = document.getElementById('captureVideo');
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = captureVideo.videoWidth;
+            tempCanvas.height = captureVideo.videoHeight;
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCtx.drawImage(captureVideo, 0, 0);
+            
+            tempCanvas.toBlob((blob) => {
+                capturedBlobs.push(blob);
+                updateCaptureGrid();
+            }, 'image/jpeg', 0.9);
+        });
+
+        function updateCaptureGrid() {
+            const grid = document.getElementById('captureGrid');
+            const count = document.getElementById('captureCount');
+            const sendBtn = document.getElementById('sendAllCaptures');
+            
+            count.textContent = `${capturedBlobs.length} fotos capturadas`;
+            sendBtn.disabled = capturedBlobs.length === 0;
+            
+            grid.innerHTML = '';
+            capturedBlobs.forEach((blob, index) => {
+                const div = document.createElement('div');
+                div.className = 'capture-thumbnail';
+                const img = document.createElement('img');
+                img.src = URL.createObjectURL(blob);
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'remove-btn';
+                removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+                removeBtn.addEventListener('click', () => {
+                    capturedBlobs.splice(index, 1);
+                    updateCaptureGrid();
+                });
+                div.appendChild(img);
+                div.appendChild(removeBtn);
+                grid.appendChild(div);
+            });
+        }
+
+        document.getElementById('sendAllCaptures').addEventListener('click', async () => {
+            const classification = document.getElementById('captureClass').value;
+            const status = document.getElementById('captureStatus');
+            const sendBtn = document.getElementById('sendAllCaptures');
+            
+            if (!classification) {
+                status.className = 'status-message error';
+                status.textContent = 'Selecione uma pasta de destino';
+                return;
+            }
+            
+            if (capturedBlobs.length === 0) {
+                status.className = 'status-message error';
+                status.textContent = 'Capture pelo menos uma foto';
+                return;
+            }
+            
+            sendBtn.disabled = true;
+            sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+            
+            try {
+                const formData = new FormData();
+                formData.append('classification', classification);
+                capturedBlobs.forEach((blob, index) => {
+                    formData.append('images', blob, `capture_${index}.jpg`);
+                });
+                
+                const response = await fetch('/dataset/capture-multiple', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    status.className = 'status-message success';
+                    status.textContent = result.message;
+                    capturedBlobs = [];
+                    updateCaptureGrid();
+                    loadFolders();
+                    
+                    if (captureStream) {
+                        captureStream.getTracks().forEach(track => track.stop());
+                        captureStream = null;
+                    }
+                    
+                    setTimeout(() => {
+                        document.getElementById('captureModal').classList.remove('active');
+                    }, 1500);
+                } else {
+                    status.className = 'status-message error';
+                    status.textContent = result.detail || 'Erro ao enviar fotos';
+                }
+            } catch (err) {
+                status.className = 'status-message error';
+                status.textContent = 'Erro: ' + err.message;
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.innerHTML = '<i class="fas fa-upload"></i> Enviar Todas as Fotos';
+            }
+        });
+
+        loadFolders();
+
+        // Impede fechamento do modal ao clicar dentro dele
+// Impede fechamento do modal ao clicar dentro dele
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', e => e.stopPropagation());
+        });
+
+
+    </script>
+</body>
+</html>

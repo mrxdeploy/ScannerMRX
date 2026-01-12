@@ -1,0 +1,20 @@
+You reached the start of the range
+Dec 15, 2025, 2:48 PM
+Mounting volume on: /var/lib/containers/railwayapp/bind-mounts/821936fd-17d6-436c-974a-38d055c38790/vol_bk69v2tq8ghjfxua
+Starting Container
+Certificate will not expire
+PostgreSQL Database directory appears to contain a database; Skipping initialization
+2025-12-15 17:49:40.402 UTC [6] LOG:  starting PostgreSQL 17.7 (Debian 17.7-3.pgdg13+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit
+2025-12-15 17:49:40.403 UTC [6] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+2025-12-15 17:49:40.403 UTC [6] LOG:  listening on IPv6 address "::", port 5432
+2025-12-15 17:49:40.408 UTC [6] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2025-12-15 17:49:40.426 UTC [29] LOG:  database system was interrupted; last known up at 2025-12-15 17:01:06 UTC
+2025-12-15 17:49:40.858 UTC [29] LOG:  database system was not properly shut down; automatic recovery in progress
+2025-12-15 17:49:40.863 UTC [29] LOG:  redo starts at 0/199A4A0
+2025-12-15 17:49:40.863 UTC [29] LOG:  invalid record length at 0/199A5E0: expected at least 24, got 0
+2025-12-15 17:49:40.863 UTC [29] LOG:  redo done at 0/199A5A8 system usage: CPU: user: 0.00 s, system: 0.00 s, elapsed: 0.00 s
+2025-12-15 17:49:40.872 UTC [27] LOG:  checkpoint starting: end-of-recovery immediate wait
+2025-12-15 17:49:40.890 UTC [27] LOG:  checkpoint complete: wrote 3 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.006 s, sync=0.002 s, total=0.021 s; sync files=2, longest=0.002 s, average=0.001 s; distance=0 kB, estimate=0 kB; lsn=0/199A5E0, redo lsn=0/199A5E0
+2025-12-15 17:49:40.894 UTC [6] LOG:  database system is ready to accept connections
+2025-12-15 17:54:40.989 UTC [27] LOG:  checkpoint starting: time
+2025-12-15 17:54:41.508 UTC [27] LOG:  checkpoint complete: wrote 5 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.502 s, sync=0.005 s, total=0.520 s; sync files=2, longest=0.005 s, average=0.003 s; distance=8 kB, estimate=8 kB; lsn=0/199C6B8, redo lsn=0/199C660

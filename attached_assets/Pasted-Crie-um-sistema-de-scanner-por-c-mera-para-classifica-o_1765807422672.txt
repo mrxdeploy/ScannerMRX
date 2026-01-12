@@ -1,0 +1,93 @@
+Crie um sistema de scanner por câmera para classificação de sucata eletrônica,
+utilizando comparação por similaridade de imagens.
+
+OBJETIVO:
+O sistema deve capturar imagens via câmera (webcam ou celular) e classificar
+automaticamente o item escaneado de acordo com as classificações reais usadas
+no estoque da empresa.
+
+CLASSIFICAÇÕES OFICIAIS (NÃO ALTERAR NOMES):
+- HIGH GRADE
+- MIDION GRADE
+- MIDION GRADE 1 - MG 1
+- MIDION GRADE 2 - MG 2
+- LOW GRADE
+- LOW
+- DIVERSOS
+- GARIMPOS
+- MOAGEM
+- HD
+
+ESTRUTURA DO DATASET:
+Criar um diretório base `/dataset/` seguindo exatamente esta estrutura:
+
+/dataset
+  /HIGH GRADE
+  /MIDION GRADE
+  /MIDION GRADE 1 - MG 1
+  /MIDION GRADE 2 - MG 2
+  /LOW GRADE
+  /LOW
+  /DIVERSOS
+  /GARIMPOS
+  /MOAGEM
+  /HD
+
+Cada pasta conterá imagens reais dos materiais correspondentes àquela
+classificação, conforme o padrão do estoque físico.
+
+FUNCIONAMENTO DO SCANNER:
+1. Usuário ativa a câmera
+2. Sistema captura a imagem do material
+3. A imagem é processada e convertida em embedding vetorial
+4. O sistema compara essa imagem com as imagens armazenadas no dataset
+5. O sistema retorna:
+   - Classificação mais provável
+   - Percentual de similaridade
+   - Top 3 classificações mais próximas
+
+REQUISITOS TÉCNICOS:
+- Linguagem: Python
+- Backend: FastAPI
+- Frontend: HTML + JavaScript
+- Captura de câmera via getUserMedia
+- Processamento local (sem APIs pagas)
+
+MODELO DE VISÃO COMPUTACIONAL (GRATUITO):
+- Utilizar OpenCLIP (modelo pré-treinado open-source)
+- Utilizar OpenCV para captura e pré-processamento
+- Similaridade vetorial via cosine similarity
+
+FLUXO DE IA:
+1. Converter todas as imagens do dataset em embeddings
+2. Salvar embeddings em arquivos (.pkl ou .npy)
+3. Converter a imagem capturada em embedding
+4. Comparar com todos os embeddings existentes
+5. Agrupar resultados por pasta (classificação)
+6. Retornar a classificação com maior similaridade média
+
+ENDPOINTS OBRIGATÓRIOS:
+- POST /scan
+  → recebe imagem e retorna classificação + score
+
+- POST /dataset/upload
+  → adiciona nova imagem a uma classificação específica
+
+- GET /dataset/classes
+  → lista todas as classificações disponíveis
+
+ARMAZENAMENTO:
+- Imagens armazenadas localmente no projeto
+- Embeddings armazenados localmente
+- Sistema deve funcionar offline após setup inicial
+
+EXTRAS IMPORTANTES:
+- Código modular
+- Fácil de treinar novamente
+- Preparado para futura integração com sistema de estoque
+- Comentários explicativos no código
+
+RESULTADO ESPERADO:
+Um scanner funcional que reconhece e classifica corretamente:
+HIGH GRADE, MIDION GRADE, LOW GRADE, GARIMPOS, MOAGEM, HD, etc.,
+usando imagens reais do estoque.

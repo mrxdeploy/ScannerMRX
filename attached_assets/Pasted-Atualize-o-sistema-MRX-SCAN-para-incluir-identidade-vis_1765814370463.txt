@@ -1,0 +1,69 @@
+Atualize o sistema MRX SCAN para incluir identidade visual com logo
+e implementar uma regra de validação mínima de compatibilidade
+na classificação por imagem.
+
+IDENTIDADE VISUAL:
+- Incluir a logo fornecida em anexo pelo usuário
+- A logo deve aparecer:
+   - No topo da aplicação (header)
+   - Ao lado do nome do sistema: MRX SCAN
+- Ajustar tamanho da logo para uso profissional (não distorcer)
+- Manter layout limpo, semelhante ao Google Drive
+
+REGRAS DE COMPATIBILIDADE (MUITO IMPORTANTE):
+- Definir um LIMIAR MÍNIMO de compatibilidade de 60%
+- Esse valor deve ser configurável no backend (ex: THRESHOLD = 0.60)
+
+LÓGICA DE DECISÃO:
+1. O sistema realiza a comparação da imagem escaneada com o dataset
+2. Obtém a melhor similaridade encontrada
+3. Se a MAIOR similaridade < 60%:
+   - NÃO atribuir nenhuma classificação
+   - NÃO exibir imagem de referência
+   - Retornar uma mensagem de alerta padrão
+
+MENSAGEM PADRÃO (USAR EXATAMENTE ESTE TEXTO):
+"Essa imagem não tem compatibilidade com nenhuma do seu banco de dados.
+Crie uma nova categoria ou adicione mais fotos."
+
+COMPORTAMENTO DA API (/scan):
+- Se similaridade >= 60%:
+   - Retornar classificação
+   - Retornar imagem de referência
+   - Retornar score
+- Se similaridade < 60%:
+   - Retornar:
+     {
+       "classification": null,
+       "similarity_score": "<valor>",
+       "status": "no_match",
+       "message": "Essa imagem não tem compatibilidade com nenhuma do seu banco de dados. Crie uma nova categoria ou adicione mais fotos."
+     }
+
+COMPORTAMENTO DO FRONTEND:
+- Exibir mensagem de alerta visual (warning)
+- Não exibir classificação nem imagem de referência
+- Exibir botões de ação:
+   - “Criar nova categoria”
+   - “Adicionar mais fotos ao banco”
+- Manter a imagem capturada visível para contexto
+
+EXPERIÊNCIA DO USUÁRIO:
+- O operador entende claramente que:
+   - O erro NÃO é do sistema
+   - O banco de imagens precisa ser ampliado
+- O sistema orienta o próximo passo de forma objetiva
+
+REQUISITOS TÉCNICOS:
+- Threshold configurável
+- Mensagem padronizada
+- Código limpo e documentado
+- Não usar APIs pagas
+- Funcionamento offline
+
+RESULTADO FINAL:
+O MRX SCAN passa a ter:
+- Identidade visual com logo
+- Classificações confiáveis
+- Regra clara para imagens fora do padrão
+- Orientação inteligente para crescimento do dataset
