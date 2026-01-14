@@ -286,9 +286,19 @@ class EmbeddingEngine:
                 
                 img = Image.open(io.BytesIO(content)).convert("RGB")
                 
+                # OPTIMIZATION: Resize and Compress
+                MAX_DIMENSION = 1024
+                if max(img.size) > MAX_DIMENSION:
+                    img.thumbnail((MAX_DIMENSION, MAX_DIMENSION), Image.Resampling.LANCZOS)
+                
+                # Save optimized version to buffer
+                optimized_buffer = io.BytesIO()
+                img.save(optimized_buffer, format='JPEG', quality=85, optimize=True)
+                optimized_content = optimized_buffer.getvalue()
+
                 pil_images.append(img)
                 valid_filenames.append(new_filename)
-                raw_contents.append(content)
+                raw_contents.append(optimized_content)
                 
             except Exception as e:
                 print(f"Skipping corrupt/invalid file {filename}: {e}")

@@ -1,6 +1,6 @@
 import os
 import time
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, Text, LargeBinary, Float
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, Text, LargeBinary, Float, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import QueuePool
@@ -107,3 +107,26 @@ def get_db():
         yield db
     finally:
         db.close()
+
+def reset_db_data():
+    """Wipe all data from tables"""
+    engine = get_engine()
+    with engine.connect() as conn:
+        trans = conn.begin()
+        try:
+            if engine.dialect.name == 'postgresql':
+                print("Truncating tables (PostgreSQL)...")
+                conn.execute(text("TRUNCATE TABLE scan_history, embeddings, dataset_images, classifications RESTART IDENTITY CASCADE;"))
+            else:
+                print("Deleting rows (SQLite)...")
+                conn.execute(text("DELETE FROM scan_history;"))
+                conn.execute(text("DELETE FROM embeddings;"))
+                conn.execute(text("DELETE FROM dataset_images;"))
+                conn.execute(text("DELETE FROM classifications;"))
+            trans.commit()
+            print("Database wiped successfully.")
+            return True
+        except Exception as e:
+            trans.rollback()
+            print(f"Error wiping database: {e}")
+            raise e

@@ -14,7 +14,7 @@ from pathlib import Path
 from contextlib import asynccontextmanager
 
 from embedding_engine import get_engine, OFFICIAL_CLASSES
-from database import init_db, get_db, ScanHistory
+from database import init_db, get_db, ScanHistory, reset_db_data
 
 app = FastAPI(
     title="MRX SCAN",
@@ -318,6 +318,27 @@ async def retrain_dataset():
             "message": "Embeddings reloaded from database"
         })
     
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/admin/reset-database")
+async def reset_database():
+    """
+    DANGER: Wipe all database data (Images, Embeddings, History)
+    Use this to clear 'DiskFull' state.
+    """
+    try:
+        reset_db_data()
+        
+        # After wipe, we might want to re-init structure?
+        # init_db() is idenmpotent, so it's safe to call or rely on next startup
+        # But let's recreate classes if we can?
+        # Actually sync_initial_data handles that on startup.
+        
+        return JSONResponse(content={
+            "success": True,
+            "message": "Database successfully wiped. All images and embeddings deleted."
+        })
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
