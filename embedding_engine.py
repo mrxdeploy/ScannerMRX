@@ -555,6 +555,141 @@ class EmbeddingEngine:
             "message": "Classification successful"
         }
     
+    
+    def rename_class(self, old_name: str, new_name: str) -> bool:
+        """Rename a classification across all tables"""
+        try:
+            # 1. Update Classification table
+            cls = self.db_session.query(Classification).filter_by(name=old_name).first()
+            if not cls:
+                return False
+                
+            # Check if new name exists
+            if self.db_session.query(Classification).filter_by(name=new_name).first():
+                return False
+                
+            cls.name = new_name
+            
+            # 2. Update DatasetImage table
+            self.db_session.query(DatasetImage).filter_by(classification=old_name).update(
+                {DatasetImage.classification: new_name}, synchronize_session=False
+            )
+            
+            # 3. Update Embedding table
+            self.db_session.query(Embedding).filter_by(classification=old_name).update(
+                {Embedding.classification: new_name}, synchronize_session=False
+            )
+            
+            self.db_session.commit()
+            
+            # 4. Update Caches
+            if old_name in self.embeddings_cache:
+                self.embeddings_cache[new_name] = self.embeddings_cache.pop(old_name)
+            
+            if old_name in self.image_paths_cache:
+                # Update paths in the list
+                paths = self.image_paths_cache.pop(old_name)
+                for p in paths:
+                    p["path"] = p["path"].replace(f"/images/{old_name}/", f"/images/{new_name}/")
+                self.image_paths_cache[new_name] = paths
+                
+            return True
+            
+        except Exception as e:
+            self.db_session.rollback()
+            print(f"Error renaming class {old_name} to {new_name}: {e}")
+            raise e
+
+    def delete_class(self, class_name: str) -> bool:
+        """Delete a classification and all associated data"""
+        try:
+            # 1. Delete images
+            self.db_session.query(DatasetImage).filter_by(classification=class_name).delete()
+            
+            # 2. Delete embeddings
+            self.db_session.query(Embedding).filter_by(classification=class_name).delete()
+            
+            # 3. Delete classification
+            self.db_session.query(Classification).filter_by(name=class_name).delete()
+            
+            self.db_session.commit()
+            
+            # 4. Update Caches
+            self.embeddings_cache.pop(class_name, None)
+            self.image_paths_cache.pop(class_name, None)
+            
+            return True
+            
+        except Exception as e:
+            self.db_session.rollback()
+            print(f"Error deleting class {class_name}: {e}")
+            raise e
+
+    def delete_images(self, image_ids: List[int]) -> bool:
+        """Delete specific images and their corresponding embeddings"""
+        try:
+            if not image_ids:
+                return True
+                
+            # We need to handle this carefully because Embeddings don't have a direct link to Images ID
+            # We assume strict ordering by ID for both tables within a classification
+            
+            # Get all images to be deleted to know their classifications
+            images_to_delete = self.db_session.query(DatasetImage).filter(DatasetImage.id.in_(image_ids)).all()
+            
+            if not images_to_delete:
+                return False
+                
+            affected_classes = set(img.classification for img in images_to_delete)
+            
+            for class_name in affected_classes:
+                # Get all images and embeddings for this class, sorted by ID
+                all_images = self.db_session.query(DatasetImage).filter_by(classification=class_name).order_by(DatasetImage.id).all()
+                all_embeddings = self.db_session.query(Embedding).filter_by(classification=class_name).order_by(Embedding.id).all()
+                
+                # Identify indices to delete
+                indices_to_delete = []
+                ids_in_class_to_delete = set(img.id for img in images_to_delete if img.classification == class_name)
+                
+                for i, img in enumerate(all_images):
+                    if img.id in ids_in_class_to_delete:
+                        indices_to_delete.append(i)
+                
+                # Delete from DB
+                # Delete Embeddings first (by ID)
+                embeddings_to_delete_ids = [all_embeddings[i].id for i in indices_to_delete if i < len(all_embeddings)]
+                if embeddings_to_delete_ids:
+                    self.db_session.query(Embedding).filter(Embedding.id.in_(embeddings_to_delete_ids)).delete(synchronize_session=False)
+                
+                # Delete Images
+                self.db_session.query(DatasetImage).filter(DatasetImage.id.in_(ids_in_class_to_delete)).delete(synchronize_session=False)
+                
+                # Update Cache for this class
+                # It's safer to just reload this class from DB or rebuild cache locally
+                # Let's rebuild locally for speed
+                current_embs = self.embeddings_cache.get(class_name)
+                current_paths = self.image_paths_cache.get(class_name)
+                
+                if current_embs is not None and len(current_embs) > 0:
+                     # Remove indices in reverse order to keep indices valid? 
+                     # Actually numpy.delete works with a list of indices
+                     self.embeddings_cache[class_name] = np.delete(current_embs, indices_to_delete, axis=0)
+                
+                if current_paths:
+                    # Filter out deleted paths
+                    self.image_paths_cache[class_name] = [
+                        p for i, p in enumerate(current_paths) 
+                        if i not in indices_to_delete
+                    ]
+            
+            self.db_session.commit()
+            return True
+            
+        except Exception as e:
+            self.db_session.rollback()
+            print(f"Error deleting images: {e}")
+            raise e
+
     def get_class_info(self) -> List[Dict]:
         """Get information about all classes and their image counts from DB"""
         

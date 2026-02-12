@@ -214,6 +214,69 @@ async def create_classification(name: str = Form(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.post("/dataset/rename")
+async def rename_classification(old_name: str = Form(...), new_name: str = Form(...)):
+    """
+    Rename an existing classification
+    """
+    try:
+        engine = get_engine()
+        success = engine.rename_class(old_name, new_name)
+        
+        if not success:
+             return JSONResponse(content={
+                "success": False,
+                "message": f"Could not rename '{old_name}' to '{new_name}'. Check if target name exists."
+            }, status_code=400)
+            
+        return JSONResponse(content={
+            "success": True,
+            "message": f"Renamed '{old_name}' to '{new_name}' successfully"
+        })
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/dataset/delete")
+async def delete_classification(name: str = Form(...)):
+    """
+    Delete a classification and all its images
+    """
+    try:
+        engine = get_engine()
+        success = engine.delete_class(name)
+        
+        return JSONResponse(content={
+            "success": True,
+            "message": f"Deleted '{name}' successfully"
+        })
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/dataset/delete-images")
+async def delete_images_endpoint(image_ids: str = Form(...)):
+    """
+    Delete specific images by ID. image_ids is a JSON string or comma-sep list
+    """
+    try:
+        import json
+        try:
+            ids = json.loads(image_ids)
+        except:
+            ids = [int(x) for x in image_ids.split(",") if x.strip()]
+            
+        if not ids:
+             return JSONResponse(content={"success": True, "message": "No images to delete"})
+             
+        engine = get_engine()
+        success = engine.delete_images(ids)
+        
+        return JSONResponse(content={
+            "success": True,
+            "message": f"Deleted {len(ids)} images successfully"
+        })
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.get("/dataset/images/{class_name:path}")
 async def get_class_images(class_name: str):
     """
@@ -226,6 +289,7 @@ async def get_class_images(class_name: str):
         images = []
         for match in matches:
             images.append({
+                "id": match.get("id"),
                 "filename": match["filename"],
                 "path": match["path"]
             })
