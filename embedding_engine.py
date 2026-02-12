@@ -360,9 +360,18 @@ class EmbeddingEngine:
                 # 5. Update Cache
                 new_vectors_stacked = np.array(cache_update_vectors)
                 
+                # Create cache paths with real IDs
+                real_cache_paths = []
+                for img_rec in new_images_records:
+                    real_cache_paths.append({
+                        "id": img_rec.id,
+                        "filename": img_rec.filename,
+                        "path": img_rec.image_path
+                    })
+
                 if class_name not in self.embeddings_cache:
                     self.embeddings_cache[class_name] = new_vectors_stacked
-                    self.image_paths_cache[class_name] = cache_update_paths
+                    self.image_paths_cache[class_name] = real_cache_paths
                 else:
                     current_embs = self.embeddings_cache[class_name]
                     if len(current_embs) == 0:
@@ -370,7 +379,7 @@ class EmbeddingEngine:
                     else:
                         self.embeddings_cache[class_name] = np.vstack([current_embs, new_vectors_stacked])
                     
-                    self.image_paths_cache[class_name].extend(cache_update_paths)
+                    self.image_paths_cache[class_name].extend(real_cache_paths)
                     
             except Exception as e:
                 self.db_session.rollback()
