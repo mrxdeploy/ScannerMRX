@@ -496,18 +496,25 @@ class EmbeddingEngine:
             reverse=True
         )
         
-        top_class = sorted_classes[0][0] if sorted_classes else None
-        top_score = sorted_classes[0][1]["avg_similarity"] if sorted_classes else 0.0
-        
+        # CHANGED: Top class is now determined by the single best image match,
+        # not the average of the class.
         sorted_image_matches = sorted(
             all_image_matches,
             key=lambda x: x["similarity"],
             reverse=True
         )
         
-        reference_image = None
         if sorted_image_matches:
             best_match = sorted_image_matches[0]
+            top_class = best_match["classification"]
+            top_score = best_match["similarity"] / 100.0 # Convert back to 0-1 for consistency with prev logic
+        else:
+            top_class = None
+            top_score = 0.0
+
+        reference_image = None
+        if sorted_image_matches:
+            # The reference image is the best match itself
             reference_image = {
                 "image_path": best_match["image_path"],
                 "classification": best_match["classification"],
@@ -515,6 +522,12 @@ class EmbeddingEngine:
             }
         
         top_3_images = sorted_image_matches[:3]
+        
+        # We still return top 3 classes by average for the UI list if needed,
+        # or we could switch this to be the top 3 images' classes.
+        # The UI shows "Top 3 Correspondencias" which seems to be the images list.
+        # The "Top 3" list in the JSON response seems to be classes.
+        # We will keep the class list as-is for broader context, but the main "Winner" is the best image.
         
         top_3_classes = [
             {
@@ -527,7 +540,7 @@ class EmbeddingEngine:
         ]
         
         has_samples = len(all_image_matches) > 0
-        best_similarity = sorted_image_matches[0]["similarity"] / 100.0 if sorted_image_matches else 0.0
+        best_similarity = top_score # This is now consistent with top_class
         
         if not has_samples:
             return {
